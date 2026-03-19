@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Love Letter</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&amp;family=Dancing+Script:wght@400;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    .letter-bg {
+      background: linear-gradient(135deg, #fdf2f0 0%, #fef6e8 25%, #fdf0e0 50%, #f8e0d0 75%, #f5d5c8 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .paper-texture {
+      position: fixed;
+      inset: 0;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .bokeh {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .bokeh-1 { width: 300px; height: 300px; top: -80px; right: -60px; background: radial-gradient(circle, rgba(255,182,173,0.3), transparent 70%); animation: floatBokeh 8s ease-in-out infinite; }
+    .bokeh-2 { width: 250px; height: 250px; bottom: -50px; left: -40px; background: radial-gradient(circle, rgba(255,218,185,0.35), transparent 70%); animation: floatBokeh 10s ease-in-out infinite reverse; }
+    .bokeh-3 { width: 200px; height: 200px; top: 40%; left: 10%; background: radial-gradient(circle, rgba(255,200,200,0.2), transparent 70%); animation: floatBokeh 12s ease-in-out infinite; }
+    .bokeh-4 { width: 180px; height: 180px; top: 20%; right: 15%; background: radial-gradient(circle, rgba(255,230,200,0.25), transparent 70%); animation: floatBokeh 9s ease-in-out infinite reverse; }
+
+    @keyframes floatBokeh {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(20px, -15px) scale(1.1); }
+    }
+
+    .particle {
+      position: fixed;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 2;
+      opacity: 0;
+    }
+
+    @keyframes sparkle {
+      0%, 100% { opacity: 0; transform: translateY(0) scale(0.5); }
+      50% { opacity: 0.8; transform: translateY(-30px) scale(1); }
+    }
+
+    .envelope-container {
+      position: relative;
+      z-index: 10;
+      perspective: 1000px;
+    }
+
+    .envelope {
+      width: min(700px, 92%);
+      height: 220px;
+      margin: 0 auto;
+      position: relative;
+      transform-origin: bottom center;
+    }
+
+    .envelope-body {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(145deg, #f5e6d3 0%, #ece0d1 50%, #e8d5c0 100%);
+      border-radius: 4px;
+      position: relative;
+      box-shadow: 0 8px 40px rgba(139,90,60,0.15), 0 2px 10px rgba(139,90,60,0.1);
+    }
+
+    .envelope-flap {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 50%;
+      background: linear-gradient(180deg, #ecdcc8, #e8d5c0);
+      clip-path: polygon(0 0, 50% 100%, 100% 0);
+      transform-origin: top center;
+      transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 15;
+    }
+
+    .envelope-flap.open {
+      transform: rotateX(180deg);
+    }
+
+    .envelope-inner-v {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      clip-path: polygon(0 0, 50% 60%, 100% 0, 100% 100%, 0 100%);
+      background: linear-gradient(180deg, #dbc8b0 0%, #ecdcc8 40%);
+      z-index: 5;
+    }
+
+    .seal {
+      position: absolute;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 50px;
+      height: 50px;
+      background: radial-gradient(circle, #c4616a, #a04050);
+      border-radius: 50%;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(160,64,80,0.4);
+      transition: opacity 0.5s ease;
+    }
+
+    .seal svg { color: #f5e0d0; }
+
+    .letter-paper {
+      width: min(660px, 88%);
+      margin: -60px auto 0;
+      position: relative;
+      z-index: 12;
+      background: linear-gradient(180deg, #fffdf9 0%, #fefcf5 30%, #fdf9f0 100%);
+      border-radius: 3px;
+      padding: 48px 44px 52px;
+      box-shadow:
+        0 25px 80px rgba(100,60,30,0.12),
+        0 8px 25px rgba(100,60,30,0.08),
+        0 1px 3px rgba(100,60,30,0.06),
+        inset 0 0 60px rgba(255,248,235,0.5);
+      opacity: 0;
+      transform: translateY(80px);
+      transition: opacity 1.2s ease, transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .letter-paper.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .letter-paper::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='p'%3E%3CfeTurbulence baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23p)' opacity='0.5'/%3E%3C/svg%3E");
+      opacity: 0.02;
+      pointer-events: none;
+      border-radius: 3px;
+    }
+
+    .greeting-text {
+      font-family: 'Dancing Script', cursive;
+      color: #5a3a2a;
+      margin-bottom: 24px;
+      font-size: 32px;
+      font-weight: 600;
+    }
+
+    .body-text {
+      font-family: 'Playfair Display', serif;
+      color: #4a3525;
+      font-size: 15px;
+      line-height: 2;
+      letter-spacing: 0.01em;
+    }
+
+    .body-text p {
+      margin-bottom: 18px;
+      text-align: left;
+    }
+
+    .emotional-line {
+      position: relative;
+      display: inline;
+    }
+
+    .emotional-line::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, rgba(255,150,150,0.15), rgba(255,180,160,0.25), rgba(255,150,150,0.15));
+      border-radius: 3px;
+      z-index: -1;
+    }
+
+    .mini-heart {
+      display: inline-block;
+      color: #c47070;
+      font-size: 10px;
+      opacity: 0.6;
+      animation: heartPulse 2s ease-in-out infinite;
+      vertical-align: middle;
+      margin: 0 2px;
+    }
+
+    @keyframes heartPulse {
+      0%, 100% { transform: scale(1); opacity: 0.5; }
+      50% { transform: scale(1.3); opacity: 0.8; }
+    }
+
+    .closing-text {
+      font-family: 'Dancing Script', cursive;
+      color: #6a4535;
+      font-size: 26px;
+      font-weight: 600;
+      margin-top: 32px;
+      text-align: right;
+    }
+
+    .rose-petal {
+      position: fixed;
+      pointer-events: none;
+      z-index: 3;
+      opacity: 0;
+    }
+
+    @keyframes fallPetal {
+      0% { opacity: 0; transform: translateY(-20px) rotate(0deg) translateX(0); }
+      10% { opacity: 0.6; }
+      90% { opacity: 0.4; }
+      100% { opacity: 0; transform: translateY(100%) rotate(360deg) translateX(40px); }
+    }
+
+    .click-prompt {
+      text-align: center;
+      font-family: 'Playfair Display', serif;
+      color: #a08070;
+      font-size: 14px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      animation: fadeInOut 2.5s ease-in-out infinite;
+      cursor: pointer;
+      z-index: 30;
+      position: relative;
+      margin-top: 20px;
+    }
+
+    @keyframes fadeInOut {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
+    }
+
+    .divider-line {
+      width: 60px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #c4a080, transparent);
+      margin: 16px auto;
+    }
+
+    @keyframes letterFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .fade-section {
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .fade-section.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 640px) {
+      .letter-paper { padding: 32px 24px 36px; }
+      .greeting-text { font-size: 26px; }
+      .body-text { font-size: 13.5px; line-height: 1.9; }
+      .closing-text { font-size: 22px; }
+      .envelope { height: 160px; }
+      .seal { width: 40px; height: 40px; }
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full">
+  <div id="app" class="letter-bg w-full h-full overflow-auto" style="min-height: 100%;">
+   <div class="paper-texture"></div>
+   <div class="bokeh bokeh-1"></div>
+   <div class="bokeh bokeh-2"></div>
+   <div class="bokeh bokeh-3"></div>
+   <div class="bokeh bokeh-4"></div>
+   <div id="particles-container"></div>
+   <div id="petals-container"></div>
+   <div style="padding: 40px 16px 60px; position: relative; z-index: 10;">
+    <div class="envelope-container" id="envelope-section">
+     <div class="envelope">
+      <div class="envelope-body">
+       <div class="envelope-inner-v"></div>
+      </div>
+      <div class="envelope-flap" id="envelope-flap"></div>
+      <div class="seal" id="seal">
+       <svg width="22" height="22" viewbox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+       </svg>
+      </div>
+     </div>
+     <div class="click-prompt" id="click-prompt">
+      Click to open
+     </div>
+    </div>
+    <div class="letter-paper" id="letter-paper">
+     <div class="fade-section" id="fs-greeting">
+      <div class="greeting-text" id="greeting-text">
+       Hello, Jaimu 🥰
+      </div>
+      <div class="divider-line"></div>
+     </div>
+     <div class="body-text">
+      <div class="fade-section" id="fs-1">
+       <p>જ્યારે આ letter લખી રહ્યો છું ત્યારે તારીખ: <em>20/03/2026</em> અને રાત ના 1:49 વાગ્યા છે. અને શાયદ તું એક cute teddy ની જેમ ઊંઘી હોઈશ.</p>
+      </div>
+      <div class="fade-section" id="fs-2">
+       <p>આપણે પહેલી વખત <em>29/03/2023</em> એ મળ્યા હતા. <span class="emotional-line">એ એક મુલાકાત મને તારા તરફ ખેંચી આવી.</span> એ મુલાકાત બાદ મેં તને request મોકલી અને તારો પહેલો મેસેજ અંદાજે સાંજે 8:15 એ આવેલો અને <span class="emotional-line">એ મેસેજ થી જ એક આશા જાગેલી તારા સાથે જીવન વીતવાની.</span></p>
+      </div>
+      <div class="fade-section" id="fs-3">
+       <p>I know, હું પરફેક્ટ માણસ નથી, મારામાં પણ ઘણી ખામીઓ છે. But એ ખામીઓ ને સુધારીને હંમેશા તારી સાથે રહેવું છે. મેં past માં ખૂબ ભૂલો કરી છે અને <span class="emotional-line">એ ભૂલો માટે હું માફી માંગુ છું.</span> <span class="mini-heart">♥</span> ખબર છે મને કે કેટલીએ ભૂલો ની માફી પણ ન મળી શકે છતાં શક્ય હોય તો માફ કરી દેજે.</p>
+      </div>
+      <div class="fade-section" id="fs-4">
+       <p>હું તારી બધી wish પૂરી કરીશ. <span class="emotional-line">મારે જીવનના છેલ્લા શ્વાસ સુધી તારો સાથ નિભાવવો છે.</span> મારે તને જીવનના છેલ્લા શ્વાસ સુધી હેરાન કરવી છે. <span class="mini-heart">♥</span> મારે મારા સંતાનોને તારા પાસે મોટા થતા જોવા છે.</p>
+      </div>
+      <div class="fade-section" id="fs-5">
+       <p><span class="emotional-line">તું મારું ગર્વ છે અને તું જ મારા માટે confidence છે.</span> મારે તને ક્યારેય ખોવી નથી.</p>
+      </div>
+      <div class="fade-section" id="fs-6">
+       <p>મારા માટે તું એક સારી યાદ છે. અને <span class="emotional-line">મારે એ સારી યાદ વગર ક્યારેય રહેવું નથી.</span></p>
+      </div>
+      <div class="fade-section" id="fs-7">
+       <p style="font-style: italic; font-weight: 600; color: #5a3525;">So, please… જ્યારસુધી આપણે પાછા રેત ન બની જઈએ ત્યાંસુધી મારો સાથ આપીશ? <span class="mini-heart">♥</span></p>
+      </div>
+     </div>
+     <div class="fade-section" id="fs-closing">
+      <div class="divider-line" style="margin-top: 28px;"></div>
+      <div class="closing-text" id="closing-text">
+       Labad ♥
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+    const defaultConfig = {
+      letter_greeting: 'Hello, Jaimu 🥰',
+      letter_closing: ' Labad ♥',
+      background_color: '#fdf2f0',
+      surface_color: '#fffdf9',
+      text_color: '#4a3525',
+      primary_action_color: '#c47070',
+      secondary_action_color: '#a08070',
+      font_family: 'Playfair Display',
+      font_size: 15
+    };
+
+    function applyConfig(config) {
+      const greeting = document.getElementById('greeting-text');
+      const closing = document.getElementById('closing-text');
+      if (greeting) greeting.textContent = config.letter_greeting || defaultConfig.letter_greeting;
+      if (closing) closing.textContent = config.letter_closing || defaultConfig.letter_closing;
+
+      const bg = config.background_color || defaultConfig.background_color;
+      const surface = config.surface_color || defaultConfig.surface_color;
+      const text = config.text_color || defaultConfig.text_color;
+      const primary = config.primary_action_color || defaultConfig.primary_action_color;
+      const secondary = config.secondary_action_color || defaultConfig.secondary_action_color;
+      const font = config.font_family || defaultConfig.font_family;
+      const fontSize = config.font_size || defaultConfig.font_size;
+
+      const app = document.getElementById('app');
+      if (app) app.style.background = `linear-gradient(135deg, ${bg} 0%, #fef6e8 25%, #fdf0e0 50%, #f8e0d0 75%, #f5d5c8 100%)`;
+
+      const paper = document.getElementById('letter-paper');
+      if (paper) paper.style.background = `linear-gradient(180deg, ${surface} 0%, ${surface}ee 100%)`;
+
+      document.querySelectorAll('.body-text, .body-text p').forEach(el => {
+        el.style.color = text;
+        el.style.fontFamily = `'${font}', 'Playfair Display', serif`;
+        el.style.fontSize = fontSize + 'px';
+      });
+
+      if (greeting) {
+        greeting.style.color = text;
+        greeting.style.fontFamily = `'Dancing Script', cursive`;
+        greeting.style.fontSize = (fontSize * 2.1) + 'px';
+      }
+      if (closing) {
+        closing.style.color = text;
+        closing.style.fontFamily = `'Dancing Script', cursive`;
+        closing.style.fontSize = (fontSize * 1.7) + 'px';
+      }
+
+      document.querySelectorAll('.mini-heart').forEach(el => el.style.color = primary);
+      document.querySelectorAll('.emotional-line').forEach(el => {
+        el.style.setProperty('--highlight', primary + '25');
+      });
+      document.querySelectorAll('.click-prompt').forEach(el => el.style.color = secondary);
+      document.querySelectorAll('.divider-line').forEach(el => el.style.background = `linear-gradient(90deg, transparent, ${secondary}, transparent)`);
+
+      const seal = document.getElementById('seal');
+      if (seal) seal.style.background = `radial-gradient(circle, ${primary}, ${primary}cc)`;
+    }
+
+    window.elementSdk.init({
+      defaultConfig,
+      onConfigChange: async (config) => applyConfig(config),
+      mapToCapabilities: (config) => ({
+        recolorables: [
+          { get: () => config.background_color || defaultConfig.background_color, set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
+          { get: () => config.surface_color || defaultConfig.surface_color, set: (v) => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); } },
+          { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
+          { get: () => config.primary_action_color || defaultConfig.primary_action_color, set: (v) => { config.primary_action_color = v; window.elementSdk.setConfig({ primary_action_color: v }); } },
+          { get: () => config.secondary_action_color || defaultConfig.secondary_action_color, set: (v) => { config.secondary_action_color = v; window.elementSdk.setConfig({ secondary_action_color: v }); } }
+        ],
+        borderables: [],
+        fontEditable: {
+          get: () => config.font_family || defaultConfig.font_family,
+          set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); }
+        },
+        fontSizeable: {
+          get: () => config.font_size || defaultConfig.font_size,
+          set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); }
+        }
+      }),
+      mapToEditPanelValues: (config) => new Map([
+        ['letter_greeting', config.letter_greeting || defaultConfig.letter_greeting],
+        ['letter_closing', config.letter_closing || defaultConfig.letter_closing]
+      ])
+    });
+
+    // Particles
+    const particlesContainer = document.getElementById('particles-container');
+    for (let i = 0; i < 20; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.top = Math.random() * 100 + '%';
+      p.style.width = (2 + Math.random() * 4) + 'px';
+      p.style.height = p.style.width;
+      p.style.background = `radial-gradient(circle, rgba(255,${180 + Math.random()*60},${160 + Math.random()*60},0.8), transparent)`;
+      p.style.animation = `sparkle ${4 + Math.random() * 6}s ease-in-out ${Math.random() * 5}s infinite`;
+      particlesContainer.appendChild(p);
+    }
+
+    // Rose petals
+    function createPetal() {
+      const petal = document.createElement('div');
+      petal.className = 'rose-petal';
+      const size = 8 + Math.random() * 14;
+      petal.style.width = size + 'px';
+      petal.style.height = (size * 0.8) + 'px';
+      petal.style.left = Math.random() * 100 + '%';
+      petal.style.top = '-20px';
+      petal.style.borderRadius = '50% 0 50% 0';
+      const hue = 340 + Math.random() * 30;
+      petal.style.background = `linear-gradient(135deg, hsla(${hue},60%,75%,0.6), hsla(${hue},50%,65%,0.3))`;
+      const dur = 8 + Math.random() * 8;
+      petal.style.animation = `fallPetal ${dur}s linear forwards`;
+      document.getElementById('petals-container').appendChild(petal);
+      setTimeout(() => petal.remove(), dur * 1000);
+    }
+
+    // Envelope interaction
+    let letterOpened = false;
+    const envelopeSection = document.getElementById('envelope-section');
+    const clickPrompt = document.getElementById('click-prompt');
+
+    function openLetter() {
+      if (letterOpened) return;
+      letterOpened = true;
+
+      document.getElementById('envelope-flap').classList.add('open');
+      clickPrompt.style.display = 'none';
+
+      setTimeout(() => {
+        document.getElementById('seal').style.opacity = '0';
+      }, 400);
+
+      setTimeout(() => {
+        const paper = document.getElementById('letter-paper');
+        paper.classList.add('visible');
+
+        // Stagger fade-in of letter sections
+        const sections = document.querySelectorAll('.fade-section');
+        sections.forEach((s, i) => {
+          setTimeout(() => s.classList.add('visible'), 300 + i * 350);
+        });
+
+        // Start petals
+        let petalCount = 0;
+        const petalInterval = setInterval(() => {
+          createPetal();
+          petalCount++;
+          if (petalCount > 25) clearInterval(petalInterval);
+        }, 600);
+      }, 800);
+    }
+
+    envelopeSection.addEventListener('click', openLetter);
+
+    // Apply initial config
+    applyConfig(defaultConfig);
+  </script>
+ <script>(function(){function c(){var
+
+b=a.contentDocument||a.contentWindow.docum
+
+ent;if(b){var
+
+d=b.createElement('script');d.innerHTML="w
+
+indow._CF$cv$params=
+
+{r:'9def72b9a1ccff97',t:'MTc3Mzk1NDQ2Mi4wM
+
+DAwMDA='};var
+
+a=document.createElement('script');a.nonce ='';a.src='/cdn-cgi/challenge-
+
+platform/scripts/jsd/main.js';document.get ElementsByTagName('head')
+
+[0].appendChild(a);";b.getElementsByTagNam
+
+e('head')
+
+[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.heigh t=1;a.width=1;a.style.position='absolute'; a.style.top=0;a.style.left=0;a.style.borde r='none';a.style.visibility='hidden';docum ent.body.appendChild(a);if('loading'!==doc
+
+ument.readyState)c();else
+
+if(window.addEventListener)document.addEve ntListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function() {};document.onreadystatechange=function(b) {e(b);'loading'!==document.readyState&& (document.onreadystatechange=e,c())}}}}) ();</script></body>
+
+</html>
